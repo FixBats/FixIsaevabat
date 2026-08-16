@@ -7,7 +7,7 @@ if %errorLevel% neq 0 (
 title Isaeva Fix Tool
 color 5
 
-set "CURRENT_VERSION=1.0"
+set "CURRENT_VERSION=1.1"
 set "VERSION_URL=https://raw.githubusercontent.com/FixCosmicBat/FixIsaevabat/main/version.txt"
 set "BAT_URL=https://raw.githubusercontent.com/FixCosmicBat/FixIsaevabat/main/IsaevaFix.bat"
 set "UPDATE_TEMP=%TEMP%\IsaevaFix_new.bat"
