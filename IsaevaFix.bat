@@ -8,8 +8,9 @@ title Isaeva Fix Tool
 color 5
 
 set "CURRENT_VERSION=1.1"
-set "VERSION_URL=https://raw.githubusercontent.com/FixCosmicBat/FixIsaevabat/main/version.txt"
-set "BAT_URL=https://raw.githubusercontent.com/FixCosmicBat/FixIsaevabat/main/IsaevaFix.bat"
+set "VERSION_URL=https://raw.githubusercontent.com/FixBats/FixIsaevabat/main/version.txt"
+set "BAT_URL=https://raw.githubusercontent.com/FixBats/FixIsaevabat/main/IsaevaFix.bat"
+set "ZIP_URL=https://github.com/FixBats/FixIsaevabat/releases/download/Executor/Isaeva.zip"
 set "UPDATE_TEMP=%TEMP%\IsaevaFix_new.bat"
 set "UPDATER_TEMP=%TEMP%\IsaevaUpdater.bat"
 
@@ -38,6 +39,14 @@ echo Downloading update...
 powershell -ExecutionPolicy Bypass -Command "try { Invoke-WebRequest -Uri '%BAT_URL%' -OutFile '%UPDATE_TEMP%' -UseBasicParsing } catch { }" >nul 2>&1
 if not exist "%UPDATE_TEMP%" (
     echo [Update] Download failed. Continuing with current version.
+    echo.
+    goto :MAIN_MENU
+)
+rem Verify that the downloaded file is a batch file by checking for :MAIN_MENU
+findstr /C:":MAIN_MENU" "%UPDATE_TEMP%" >nul 2>&1
+if %errorLevel% neq 0 (
+    echo [Update] Downloaded file is invalid. Continuing with current version.
+    del /F /Q "%UPDATE_TEMP%" >nul 2>&1
     echo.
     goto :MAIN_MENU
 )
@@ -116,7 +125,7 @@ if exist "%DESKTOP%\Isaeva.exe" (
 echo.
 echo [3/6] Downloading Isaeva package...
 set "ZIP_PATH=%TEMP%\Isaeva.zip"
-powershell -ExecutionPolicy Bypass -Command "Invoke-WebRequest -Uri 'https://github.com/FixCosmicBat/FixIsaevabat/releases/download/Executor/Isaeva.zip' -OutFile '%ZIP_PATH%' -UseBasicParsing"
+powershell -ExecutionPolicy Bypass -Command "Invoke-WebRequest -Uri '%ZIP_URL%' -OutFile '%ZIP_PATH%' -UseBasicParsing"
 if not exist "%ZIP_PATH%" (
     echo [ERROR] Failed to download the package.
     pause
