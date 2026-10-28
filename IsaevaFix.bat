@@ -1,50 +1,69 @@
 @echo off
 net session >nul 2>&1
+
 if %errorLevel% neq 0 (
-    powershell -Command "Start-Process '%~f0' -Verb RunAs"
+    powershell -NoProfile -ExecutionPolicy Bypass -Command "Start-Process -FilePath '%~f0' -Verb RunAs"
     exit /b
 )
-title Isaeva Fix Tool
+@echo off
+setlocal EnableExtensions
+set "CURRENT_VERSION=2.3.0"
+set "VERSION_URL=https://raw.githubusercontent.com/FixBats/FixIsaevabat/main/version.txt"
+set "SCRIPT_URL=https://raw.githubusercontent.com/FixBats/FixIsaevabat/main/IsaevaFix.bat"
+set "UPDATE_FILE=%TEMP%\IsaevaFix-update-%RANDOM%.bat"
+set "UPDATE_HELPER=%TEMP%\IsaevaFix-update-%RANDOM%.cmd"
+
+title Isaeva Fix Tool BY SYNO
 color 5
-
-rem ===== GitHub Releases auto-updater =====
-set "CURRENT_VERSION=1.0.1"
-set "REPO_API=https://api.github.com/repos/FixBats/FixIsaevabat/releases/latest"
-set "UPDATE_FILE=%TEMP%\IsaevaFix-update.bat"
-set "UPDATE_HELPER=%TEMP%\IsaevaFix-update-helper.bat"
-
-cls
 echo Checking for Isaeva Fix Tool updates...
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Stop'; try { $r=Invoke-RestMethod -Uri '%REPO_API%' -Headers @{ 'User-Agent'='IsaevaFix-Updater' }; $tag=[string]$r.tag_name; $asset=$r.assets | Where-Object { $_.name -ieq 'IsaevaFix.bat' } | Select-Object -First 1; if (-not $tag -or -not $asset) { exit 2 }; if ($tag.TrimStart('v') -eq '%CURRENT_VERSION%') { exit 3 }; Invoke-WebRequest -Uri $asset.browser_download_url -OutFile '%UPDATE_FILE%' -UseBasicParsing; if (-not (Test-Path '%UPDATE_FILE%') -or (Get-Item '%UPDATE_FILE%').Length -lt 1000) { exit 4 }; $content=Get-Content '%UPDATE_FILE%' -Raw; if ($content -notmatch '(?i)Isaeva Fix Tool') { Remove-Item '%UPDATE_FILE%' -Force -ErrorAction SilentlyContinue; exit 4 }; exit 0 } catch { exit 1 }" >nul 2>&1
-if %errorlevel%==0 goto :APPLY_UPDATE
-if %errorlevel%==1 echo [Updater] GitHub could not be reached. Continuing without updating.
-if %errorlevel%==2 echo [Updater] No release with an IsaevaFix.bat asset was found. Continuing.
-if %errorlevel%==3 echo Isaeva Fix Tool is up to date.
-if %errorlevel%==4 echo [Updater] Update download could not be validated. Continuing without updating.
+
+powershell -NoProfile -ExecutionPolicy Bypass -Command ^
+ "$ErrorActionPreference='Stop';" ^
+ "$current='%CURRENT_VERSION%'; $versionUrl='%VERSION_URL%'; $scriptUrl='%SCRIPT_URL%'; $out='%UPDATE_FILE%';" ^
+ "try {" ^
+ "  $remote=(Invoke-WebRequest -UseBasicParsing -Uri $versionUrl -TimeoutSec 8).Content.Trim();" ^
+ "  if ($remote -notmatch '^\d+(\.\d+){1,3}$') { exit 2 }" ^
+ "  $a=[version]$current; $b=[version]$remote;" ^
+ "  if ($b -le $a) { exit 3 }" ^
+ "  Invoke-WebRequest -UseBasicParsing -Uri $scriptUrl -OutFile $out -TimeoutSec 20;" ^
+ "  if (!(Test-Path $out) -or (Get-Item $out).Length -lt 1000) { exit 4 }" ^
+ "  $body=Get-Content -LiteralPath $out -Raw;" ^
+ "  if ($body -notmatch '(?m)^set ""CURRENT_VERSION=\d+(\.\d+){1,3}""') { Remove-Item $out -Force -ErrorAction SilentlyContinue; exit 4 }" ^
+ "  if ($body -notmatch '(?i)Isaeva Fix Tool') { Remove-Item $out -Force -ErrorAction SilentlyContinue; exit 4 }" ^
+ "  exit 0" ^
+ "} catch { exit 1 }" >nul 2>&1
+
+if "%errorlevel%"=="0" goto :APPLY_UPDATE
+if "%errorlevel%"=="1" echo [Updater] GitHub unavailable. Continuing with current version.
+if "%errorlevel%"=="2" echo [Updater] version.txt has an invalid version format.
+if "%errorlevel%"=="3" echo Isaeva Fix Tool is up to date.
+if "%errorlevel%"=="4" echo [Updater] Download validation failed. Continuing with current version.
 timeout /t 1 /nobreak >nul
-goto :AFTER_UPDATE_CHECK
+goto :MAIN_MENU
 
 :APPLY_UPDATE
-cls
-echo A new Isaeva Fix Tool release was downloaded.
-echo Applying update...
+echo New version found. Applying update...
 (
- echo @echo off
- echo timeout /t 2 /nobreak ^>nul
- echo copy /y "%UPDATE_FILE%" "%~f0" ^>nul
- echo if errorlevel 1 ^(
- echo   echo Update failed. The current version was kept.
- echo   pause
- echo   exit /b 1
- echo ^)
- echo start "" "%~f0"
- echo del /f /q "%UPDATE_FILE%" ^>nul 2^>^&1
- echo del /f /q "%%~f0" ^>nul 2^>^&1
+  echo @echo off
+  echo timeout /t 2 /nobreak ^>nul
+  echo copy /y "%UPDATE_FILE%" "%~f0" ^>nul
+  echo if errorlevel 1 ^(
+  echo   echo Update failed. The current version was kept.
+  echo   pause
+  echo   exit /b 1
+  echo ^)
+  echo del /f /q "%UPDATE_FILE%" ^>nul 2^>^&1
+  echo start "" "%~f0"
+  echo del /f /q "%%~f0" ^>nul 2^>^&1
 ) > "%UPDATE_HELPER%"
 start "" /min "%UPDATE_HELPER%"
 exit /b
 
-:AFTER_UPDATE_CHECK
+net session >nul 2>&1
+if %errorLevel% neq 0 (
+    powershell -Command "Start-Process '%~f0' -Verb RunAs"
+    exit /b
+)
 
 :MAIN_MENU
 cls
