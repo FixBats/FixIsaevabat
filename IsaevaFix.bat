@@ -8,7 +8,7 @@ title Isaeva Fix Tool
 color 5
 
 rem ===== GitHub Releases auto-updater =====
-set "CURRENT_VERSION=1.0.0"
+set "CURRENT_VERSION=1.0.1"
 set "REPO_API=https://api.github.com/repos/FixBats/FixIsaevabat/releases/latest"
 set "UPDATE_FILE=%TEMP%\IsaevaFix-update.bat"
 set "UPDATE_HELPER=%TEMP%\IsaevaFix-update-helper.bat"
