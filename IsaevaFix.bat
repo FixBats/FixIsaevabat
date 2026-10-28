@@ -7,13 +7,13 @@ if %errorLevel% neq 0 (
 )
 @echo off
 setlocal EnableExtensions
-set "CURRENT_VERSION=2.3.0"
+set "CURRENT_VERSION=2.2.0"
 set "VERSION_URL=https://raw.githubusercontent.com/FixBats/FixIsaevabat/main/version.txt"
 set "SCRIPT_URL=https://raw.githubusercontent.com/FixBats/FixIsaevabat/main/IsaevaFix.bat"
 set "UPDATE_FILE=%TEMP%\IsaevaFix-update-%RANDOM%.bat"
 set "UPDATE_HELPER=%TEMP%\IsaevaFix-update-%RANDOM%.cmd"
 
-title Isaeva Fix Tool BY SYNO
+title Isaeva Fix Tool
 color 5
 echo Checking for Isaeva Fix Tool updates...
 
@@ -43,27 +43,36 @@ goto :MAIN_MENU
 
 :APPLY_UPDATE
 echo New version found. Applying update...
-(
-  echo @echo off
-  echo timeout /t 2 /nobreak ^>nul
-  echo copy /y "%UPDATE_FILE%" "%~f0" ^>nul
-  echo if errorlevel 1 ^(
-  echo   echo Update failed. The current version was kept.
-  echo   pause
-  echo   exit /b 1
-  echo ^)
-  echo del /f /q "%UPDATE_FILE%" ^>nul 2^>^&1
-  echo start "" "%~f0"
-  echo del /f /q "%%~f0" ^>nul 2^>^&1
-) > "%UPDATE_HELPER%"
-start "" /min "%UPDATE_HELPER%"
-exit /b
 
-net session >nul 2>&1
-if %errorLevel% neq 0 (
-    powershell -Command "Start-Process '%~f0' -Verb RunAs"
-    exit /b
-)
+set "TARGET=%~f0"
+set "BACKUP=%~f0.old"
+
+(
+    echo @echo off
+    echo setlocal
+    echo timeout /t 2 /nobreak ^>nul
+    echo set "TARGET=%TARGET%"
+    echo set "NEWFILE=%UPDATE_FILE%"
+    echo set "BACKUP=%BACKUP%"
+    echo if not exist "%%NEWFILE%%" exit /b 1
+    echo if exist "%%BACKUP%%" del /f /q "%%BACKUP%%"
+    echo move /y "%%TARGET%%" "%%BACKUP%%" ^>nul
+    echo if errorlevel 1 exit /b 1
+    echo move /y "%%NEWFILE%%" "%%TARGET%%" ^>nul
+    echo if errorlevel 1 ^(
+    echo   move /y "%%BACKUP%%" "%%TARGET%%" ^>nul
+    echo   echo Update failed. Previous version restored.
+    echo   pause
+    echo   exit /b 1
+    echo ^)
+    echo start "" "%%TARGET%%"
+    echo timeout /t 3 /nobreak ^>nul
+    echo del /f /q "%%BACKUP%%" ^>nul 2^>^&1
+    echo del /f /q "%%~f0" ^>nul 2^>^&1
+) > "%TEMP%\IsaevaFixUpdater.cmd"
+
+start "" /min "%TEMP%\IsaevaFixUpdater.cmd"
+exit /b)
 
 :MAIN_MENU
 cls
