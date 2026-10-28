@@ -7,7 +7,7 @@ if %errorLevel% neq 0 (
 )
 @echo off
 setlocal EnableExtensions
-set "CURRENT_VERSION=2.2.0"
+set "CURRENT_VERSION=2.4.0"
 set "VERSION_URL=https://raw.githubusercontent.com/FixBats/FixIsaevabat/main/version.txt"
 set "SCRIPT_URL=https://raw.githubusercontent.com/FixBats/FixIsaevabat/main/IsaevaFix.bat"
 set "UPDATE_FILE=%TEMP%\IsaevaFix-update-%RANDOM%.bat"
